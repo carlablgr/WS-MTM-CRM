@@ -1,6 +1,3 @@
-// Prisma schema for the Demo CRM
-// Docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,76 +7,251 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Company {
-  id          String    @id @default(cuid())
-  name        String
-  industry    String
-  website     String?
-  employees   Int       @default(0)
-  annualRevenue Decimal @default(0) @db.Decimal(14, 2)
-  city        String?
-  country     String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  contacts    Contact[]
-  deals       Deal[]
-
-  @@index([name])
-  @@index([industry])
+enum GarmentType {
+  JACKET
+  TROUSERS
+  SKIRT
+  WAISTCOAT
+  THREE_QUARTER_COAT
+  FULL_LENGTH_COAT
 }
 
-model Contact {
-  id         String   @id @default(cuid())
-  firstName  String
-  lastName   String
-  email      String   @unique
-  phone      String?
-  title      String?
-  status     ContactStatus @default(LEAD)
-  companyId  String?
-  company    Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+enum PreConsultationStatus {
+  DRAFT
+  SENT_TO_CUSTOMER
+  COMPLETED
+}
 
-  deals      Deal[]
+enum OrderStatus {
+  CONSULTATION_BOOKED
+  DEPOSIT_TAKEN
+  BRIEF_SENT_TO_TAILOR
+  IN_PRODUCTION
+  FITTING_SCHEDULED
+  COMPLETE
+  DELIVERED
+}
+
+enum VentStyle {
+  SINGLE
+  DOUBLE
+  NONE
+}
+
+enum AppointmentType {
+  PRE_CONSULTATION_CALL
+  IN_STORE_CONSULTATION
+  FITTING
+  COLLECTION
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ReminderType {
+  FOLLOW_UP_WITH_CUSTOMER
+  CHASE_ANTHONY
+  FITTING_TO_BOOK
+  BALANCE_PAYMENT_DUE
+  ORDER_READY_TO_COLLECT
+  CUSTOM
+}
+
+model Customer {
+  id             String    @id @default(cuid())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  address        String?
+  notes          String?
+  hasBlock       Boolean   @default(false)
+  blockCreatedAt DateTime?
+
+  measurements     Measurements?
+  orders           OrderForm[]
+  preConsultations PreConsultationForm[]
+  appointments     Appointment[]
+  reminders        Reminder[]
 
   @@index([lastName])
+}
+
+model Measurements {
+  id         String   @id @default(cuid())
+  updatedAt  DateTime @updatedAt
+  customerId String   @unique
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  height               Decimal? @db.Decimal(6, 2)
+  weight               Decimal? @db.Decimal(6, 2)
+  neck                 Decimal? @db.Decimal(6, 2)
+  chest                Decimal? @db.Decimal(6, 2)
+  underChest           Decimal? @db.Decimal(6, 2)
+  waist                Decimal? @db.Decimal(6, 2)
+  highHip              Decimal? @db.Decimal(6, 2)
+  hip                  Decimal? @db.Decimal(6, 2)
+  shoulderWidth        Decimal? @db.Decimal(6, 2)
+  shoulderToWaist      Decimal? @db.Decimal(6, 2)
+  shoulderToHip        Decimal? @db.Decimal(6, 2)
+  shoulderToKnee       Decimal? @db.Decimal(6, 2)
+  shoulderToFloor      Decimal? @db.Decimal(6, 2)
+  backLength           Decimal? @db.Decimal(6, 2)
+  sleeveLength         Decimal? @db.Decimal(6, 2)
+  sleeveWidth          Decimal? @db.Decimal(6, 2)
+  wristWidth           Decimal? @db.Decimal(6, 2)
+  frontChestWidth      Decimal? @db.Decimal(6, 2)
+  backChestWidth       Decimal? @db.Decimal(6, 2)
+  napeToWaist          Decimal? @db.Decimal(6, 2)
+  waistToHip           Decimal? @db.Decimal(6, 2)
+  waistToKnee          Decimal? @db.Decimal(6, 2)
+  waistToFloor         Decimal? @db.Decimal(6, 2)
+  thigh                Decimal? @db.Decimal(6, 2)
+  knee                 Decimal? @db.Decimal(6, 2)
+  calf                 Decimal? @db.Decimal(6, 2)
+  ankle                Decimal? @db.Decimal(6, 2)
+  inseam               Decimal? @db.Decimal(6, 2)
+  outseam              Decimal? @db.Decimal(6, 2)
+  rise                 Decimal? @db.Decimal(6, 2)
+  trouserWidth         Decimal? @db.Decimal(6, 2)
+  skirtLength          Decimal? @db.Decimal(6, 2)
+  bustPointToBustPoint Decimal? @db.Decimal(6, 2)
+  shoulderToBust       Decimal? @db.Decimal(6, 2)
+  underarm             Decimal? @db.Decimal(6, 2)
+  armhole              Decimal? @db.Decimal(6, 2)
+  necklineDepth        Decimal? @db.Decimal(6, 2)
+}
+
+model PreConsultationForm {
+  id                String                @id @default(cuid())
+  createdAt         DateTime              @default(now())
+  customerId        String
+  customer          Customer              @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  completedBy       String                @default("Carla")
+  occasionOrPurpose String?
+  garmentType       GarmentType?
+  stylePreferences  String?
+  fabricPreferences String?
+  inspirationNotes  String?
+  budgetRange       String?
+  existingFitIssues String?
+  additionalNotes   String?
+  status            PreConsultationStatus @default(DRAFT)
+
+  orders OrderForm[]
+
+  @@index([customerId])
   @@index([status])
-  @@index([companyId])
 }
 
-enum ContactStatus {
-  LEAD
-  QUALIFIED
-  CUSTOMER
-  CHURNED
+model OrderForm {
+  id                String      @id @default(cuid())
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  customerId        String
+  customer          Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  preConsultationId String?
+  preConsultation   PreConsultationForm? @relation(fields: [preConsultationId], references: [id])
+  conductedBy       String      @default("Carla")
+  appointmentDate   DateTime?
+  garmentType       GarmentType
+
+  // Fabric
+  fabricDescription   String?
+  fabricCode          String?
+  fabricColour        String?
+  fabricPricePerMetre Decimal?  @db.Decimal(10, 2)
+  fabricMeterage      Decimal?  @db.Decimal(8, 2)
+
+  // Construction
+  lining                      Boolean    @default(false)
+  liningColour                String?
+  liningDescription           String?
+  buttons                     String?
+  buttonCount                 Int?
+  pockets                     String?
+  lapelStyle                  String?
+  ventStyle                   VentStyle?
+  sleeveButtons               Int?
+  waistbandStyle              String?
+  hemStyle                    String?
+  additionalConstructionNotes String?
+
+  // Measurements
+  useStoredMeasurements Boolean @default(true)
+  measurementNotes      String?
+
+  // Images stored as base64 text or URLs
+  sketchUrl            String?
+  inspirationImageUrls Json?
+  fabricSwatchUrl      String?
+
+  // Pricing (makingRate and blockFee are ex-VAT)
+  makingRate      Decimal? @db.Decimal(10, 2)
+  blockFee        Decimal? @db.Decimal(10, 2)
+  subtotalExVat   Decimal? @db.Decimal(10, 2)
+  vatAmount       Decimal? @db.Decimal(10, 2)
+  totalIncVat     Decimal? @db.Decimal(10, 2)
+  depositRequired Decimal? @db.Decimal(10, 2)
+  depositPaid     Decimal? @db.Decimal(10, 2)
+  depositPaidDate DateTime?
+  balancePaidDate DateTime?
+  fullyPaid       Boolean  @default(false)
+
+  // Status & Timeline
+  status                  OrderStatus @default(CONSULTATION_BOOKED)
+  estimatedCompletionDate DateTime?
+  briefSentAt             DateTime?
+  fittingDate             DateTime?
+  completedAt             DateTime?
+  deliveredAt             DateTime?
+  internalNotes           String?
+
+  appointments Appointment[]
+  reminders    Reminder[]
+
+  @@index([customerId])
+  @@index([status])
 }
 
-model Deal {
-  id          String   @id @default(cuid())
-  title       String
-  value       Decimal  @default(0) @db.Decimal(14, 2)
-  stage       DealStage @default(PROSPECTING)
-  expectedCloseDate DateTime?
-  closedAt    DateTime?
-  companyId   String?
-  contactId   String?
-  company     Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  contact     Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Appointment {
+  id              String            @id @default(cuid())
+  createdAt       DateTime          @default(now())
+  customerId      String
+  customer        Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orderFormId     String?
+  orderForm       OrderForm?        @relation(fields: [orderFormId], references: [id])
+  appointmentDate DateTime
+  appointmentType AppointmentType
+  location        String            @default("19 Great Queen Street, London WC2B")
+  conductedBy     String            @default("Carla")
+  notes           String?
+  reminderSent    Boolean           @default(false)
+  status          AppointmentStatus @default(SCHEDULED)
 
-  @@index([stage])
-  @@index([companyId])
-  @@index([contactId])
+  @@index([customerId])
+  @@index([appointmentDate])
 }
 
-enum DealStage {
-  PROSPECTING
-  QUALIFICATION
-  PROPOSAL
-  NEGOTIATION
-  CLOSED_WON
-  CLOSED_LOST
+model Reminder {
+  id          String       @id @default(cuid())
+  createdAt   DateTime     @default(now())
+  customerId  String?
+  customer    Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  orderFormId String?
+  orderForm   OrderForm?   @relation(fields: [orderFormId], references: [id])
+  dueDate     DateTime
+  type        ReminderType
+  description String?
+  completed   Boolean      @default(false)
+  completedAt DateTime?
+
+  @@index([dueDate])
+  @@index([completed])
 }
