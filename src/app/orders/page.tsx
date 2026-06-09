@@ -32,6 +32,7 @@ export default async function OrdersPage({
     orderBy: { createdAt: "desc" },
     include: {
       customer: { select: { id: true, firstName: true, lastName: true } },
+      items: { orderBy: { sortOrder: "asc" }, select: { id: true, garmentType: true } },
     },
   });
 
@@ -109,7 +110,14 @@ export default async function OrdersPage({
                         {o.customer.lastName}, {o.customer.firstName}
                       </Link>
                     </td>
-                    <td className="table-td">{garmentTypeLabel(o.garmentType)}</td>
+                    <td className="table-td">
+                      {o.items.length
+                        ? o.items.map((it) => garmentTypeLabel(it.garmentType)).join(", ")
+                        : garmentTypeLabel(o.garmentType)}
+                      {o.items.length > 1 && (
+                        <span className="ml-1 text-xs text-green-muted">({o.items.length})</span>
+                      )}
+                    </td>
                     <td className="table-td">
                       <span className={`text-xs px-2 py-0.5 ${orderStatusColor(o.status)}`}>
                         {orderStatusLabel(o.status)}

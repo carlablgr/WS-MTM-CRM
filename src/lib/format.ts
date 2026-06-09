@@ -33,7 +33,8 @@ export function formatDateTime(value: Date | string | null | undefined): string 
   });
 }
 
-export function garmentTypeLabel(type: string): string {
+export function garmentTypeLabel(type: string | null | undefined): string {
+  if (!type) return "—";
   const map: Record<string, string> = {
     JACKET: "Jacket",
     TROUSERS: "Trousers",

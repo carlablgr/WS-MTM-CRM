@@ -8,7 +8,10 @@ export const dynamic = "force-dynamic";
 export default async function EditOrderPage({ params }: { params: { id: string } }) {
   const order = await prisma.orderForm.findUnique({
     where: { id: params.id },
-    include: { customer: { include: { measurements: true } } },
+    include: {
+      customer: { include: { measurements: true } },
+      items: { orderBy: { sortOrder: "asc" } },
+    },
   });
   if (!order) notFound();
 

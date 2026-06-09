@@ -59,22 +59,138 @@ export const FABRIC_METERAGE_DEFAULTS: Record<string, number | null> = {
 
 export const BLOCK_FEE = 350;
 
-export function calculatePricing(
+// Measurements relevant to each garment type — shown & auto-filled in the order form
+export const GARMENT_MEASUREMENTS: Record<string, { key: string; label: string }[]> = {
+  JACKET: [
+    { key: "neck", label: "Neck" },
+    { key: "chest", label: "Chest" },
+    { key: "underChest", label: "Under Chest" },
+    { key: "waist", label: "Waist" },
+    { key: "hip", label: "Hip" },
+    { key: "shoulderWidth", label: "Shoulder Width" },
+    { key: "shoulderToWaist", label: "Shoulder to Waist" },
+    { key: "shoulderToHip", label: "Shoulder to Hip" },
+    { key: "shoulderToKnee", label: "Shoulder to Knee" },
+    { key: "shoulderToFloor", label: "Shoulder to Floor" },
+    { key: "backLength", label: "Back Length" },
+    { key: "sleeveLength", label: "Sleeve Length" },
+    { key: "sleeveWidth", label: "Sleeve Width" },
+    { key: "wristWidth", label: "Wrist Width" },
+    { key: "frontChestWidth", label: "Front Chest Width" },
+    { key: "backChestWidth", label: "Back Chest Width" },
+    { key: "napeToWaist", label: "Nape to Waist" },
+    { key: "bustPointToBustPoint", label: "Bust Pt to Bust Pt" },
+    { key: "shoulderToBust", label: "Shoulder to Bust" },
+    { key: "underarm", label: "Underarm" },
+    { key: "armhole", label: "Armhole" },
+    { key: "necklineDepth", label: "Neckline Depth" },
+  ],
+  TROUSERS: [
+    { key: "waist", label: "Waist" },
+    { key: "highHip", label: "High Hip" },
+    { key: "hip", label: "Hip" },
+    { key: "thigh", label: "Thigh" },
+    { key: "knee", label: "Knee" },
+    { key: "calf", label: "Calf" },
+    { key: "ankle", label: "Ankle" },
+    { key: "inseam", label: "Inseam" },
+    { key: "outseam", label: "Outseam" },
+    { key: "rise", label: "Rise" },
+    { key: "trouserWidth", label: "Trouser Width" },
+  ],
+  SKIRT: [
+    { key: "waist", label: "Waist" },
+    { key: "highHip", label: "High Hip" },
+    { key: "hip", label: "Hip" },
+    { key: "waistToHip", label: "Waist to Hip" },
+    { key: "waistToKnee", label: "Waist to Knee" },
+    { key: "waistToFloor", label: "Waist to Floor" },
+    { key: "skirtLength", label: "Skirt Length" },
+  ],
+  WAISTCOAT: [
+    { key: "chest", label: "Chest" },
+    { key: "underChest", label: "Under Chest" },
+    { key: "waist", label: "Waist" },
+    { key: "hip", label: "Hip" },
+    { key: "shoulderWidth", label: "Shoulder Width" },
+    { key: "shoulderToWaist", label: "Shoulder to Waist" },
+    { key: "backLength", label: "Back Length" },
+    { key: "napeToWaist", label: "Nape to Waist" },
+    { key: "frontChestWidth", label: "Front Chest Width" },
+    { key: "backChestWidth", label: "Back Chest Width" },
+    { key: "bustPointToBustPoint", label: "Bust Pt to Bust Pt" },
+    { key: "shoulderToBust", label: "Shoulder to Bust" },
+  ],
+  THREE_QUARTER_COAT: [
+    { key: "neck", label: "Neck" },
+    { key: "chest", label: "Chest" },
+    { key: "underChest", label: "Under Chest" },
+    { key: "waist", label: "Waist" },
+    { key: "hip", label: "Hip" },
+    { key: "shoulderWidth", label: "Shoulder Width" },
+    { key: "shoulderToWaist", label: "Shoulder to Waist" },
+    { key: "shoulderToHip", label: "Shoulder to Hip" },
+    { key: "shoulderToKnee", label: "Shoulder to Knee" },
+    { key: "shoulderToFloor", label: "Shoulder to Floor" },
+    { key: "backLength", label: "Back Length" },
+    { key: "sleeveLength", label: "Sleeve Length" },
+    { key: "sleeveWidth", label: "Sleeve Width" },
+    { key: "wristWidth", label: "Wrist Width" },
+    { key: "frontChestWidth", label: "Front Chest Width" },
+    { key: "backChestWidth", label: "Back Chest Width" },
+    { key: "napeToWaist", label: "Nape to Waist" },
+    { key: "bustPointToBustPoint", label: "Bust Pt to Bust Pt" },
+    { key: "shoulderToBust", label: "Shoulder to Bust" },
+    { key: "underarm", label: "Underarm" },
+    { key: "armhole", label: "Armhole" },
+  ],
+  FULL_LENGTH_COAT: [
+    { key: "neck", label: "Neck" },
+    { key: "chest", label: "Chest" },
+    { key: "underChest", label: "Under Chest" },
+    { key: "waist", label: "Waist" },
+    { key: "hip", label: "Hip" },
+    { key: "shoulderWidth", label: "Shoulder Width" },
+    { key: "shoulderToWaist", label: "Shoulder to Waist" },
+    { key: "shoulderToHip", label: "Shoulder to Hip" },
+    { key: "shoulderToKnee", label: "Shoulder to Knee" },
+    { key: "shoulderToFloor", label: "Shoulder to Floor" },
+    { key: "backLength", label: "Back Length" },
+    { key: "sleeveLength", label: "Sleeve Length" },
+    { key: "sleeveWidth", label: "Sleeve Width" },
+    { key: "wristWidth", label: "Wrist Width" },
+    { key: "frontChestWidth", label: "Front Chest Width" },
+    { key: "backChestWidth", label: "Back Chest Width" },
+    { key: "napeToWaist", label: "Nape to Waist" },
+    { key: "bustPointToBustPoint", label: "Bust Pt to Bust Pt" },
+    { key: "shoulderToBust", label: "Shoulder to Bust" },
+    { key: "underarm", label: "Underarm" },
+    { key: "armhole", label: "Armhole" },
+  ],
+};
+
+export interface ItemPricing {
+  fabricCost: number;
+  itemSubtotal: number; // makingRate + fabricCost
+}
+
+export function calculateItemPricing(
   makingRate: number,
-  blockFee: number,
   fabricPricePerMetre: number,
   fabricMeterage: number
+): ItemPricing {
+  const fabricCost = fabricPricePerMetre * fabricMeterage;
+  return { fabricCost, itemSubtotal: makingRate + fabricCost };
+}
+
+export function calculateOrderTotals(
+  itemSubtotals: number[],
+  blockFee: number
 ) {
-  const fabricTotalCost = fabricPricePerMetre * fabricMeterage;
-  const subtotalExVat = makingRate + blockFee + fabricTotalCost;
+  const itemsTotal = itemSubtotals.reduce((s, v) => s + v, 0);
+  const subtotalExVat = itemsTotal + blockFee;
   const vatAmount = subtotalExVat * 0.2;
   const totalIncVat = subtotalExVat + vatAmount;
   const depositRequired = totalIncVat * 0.5;
-  return {
-    fabricTotalCost,
-    subtotalExVat,
-    vatAmount,
-    totalIncVat,
-    depositRequired,
-  };
+  return { itemsTotal, subtotalExVat, vatAmount, totalIncVat, depositRequired };
 }

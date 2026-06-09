@@ -62,7 +62,7 @@ export default async function AppointmentsPage() {
               <td className="table-td text-green-muted text-xs">
                 {a.orderForm ? (
                   <Link href={`/orders/${a.orderForm.id}`} className="hover:text-gold">
-                    {a.orderForm.garmentType.replace("_", " ")}
+                    {a.orderForm.garmentType?.replace("_", " ") ?? "Order"}
                   </Link>
                 ) : "—"}
               </td>

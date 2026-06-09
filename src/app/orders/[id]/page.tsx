@@ -8,6 +8,7 @@ import {
   orderStatusLabel,
   orderStatusColor,
 } from "@/lib/format";
+import { GARMENT_MEASUREMENTS } from "@/lib/makingRates";
 
 export const dynamic = "force-dynamic";
 
@@ -17,33 +18,23 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     include: {
       customer: { include: { measurements: true } },
       preConsultation: true,
+      items: { orderBy: { sortOrder: "asc" } },
       appointments: { orderBy: { appointmentDate: "asc" } },
       reminders: { where: { completed: false }, orderBy: { dueDate: "asc" } },
     },
   });
   if (!order) notFound();
 
-  const m = order.customer.measurements as Record<string, unknown> | null;
+  const balanceDue =
+    order.totalIncVat && order.depositPaid
+      ? Number(order.totalIncVat) - Number(order.depositPaid)
+      : order.totalIncVat
+      ? Number(order.totalIncVat)
+      : null;
 
-  const measurementFields: [string, string][] = [
-    ["chest", "Chest"], ["underChest", "Under Chest"], ["waist", "Waist"],
-    ["hip", "Hip"], ["shoulderWidth", "Shoulder Width"],
-    ["shoulderToWaist", "Shoulder to Waist"], ["shoulderToFloor", "Shoulder to Floor"],
-    ["backLength", "Back Length"], ["sleeveLength", "Sleeve Length"],
-    ["bustPointToBustPoint", "Bust Pt to Bust Pt"], ["shoulderToBust", "Shoulder to Bust"],
-    ["waistToKnee", "Waist to Knee"], ["waistToFloor", "Waist to Floor"],
-    ["inseam", "Inseam"], ["rise", "Rise"],
-  ];
-
-  const fabricTotal = order.fabricPricePerMetre && order.fabricMeterage
-    ? Number(order.fabricPricePerMetre) * Number(order.fabricMeterage)
-    : null;
-
-  const balanceDue = order.totalIncVat && order.depositPaid
-    ? Number(order.totalIncVat) - Number(order.depositPaid)
-    : order.totalIncVat
-    ? Number(order.totalIncVat)
-    : null;
+  const garmentSummary = order.items.length
+    ? order.items.map((it) => garmentTypeLabel(it.garmentType)).join(", ")
+    : garmentTypeLabel(order.garmentType);
 
   return (
     <div>
@@ -54,13 +45,18 @@ export default async function OrderDetailPage({ params }: { params: { id: string
             <Link href="/orders" className="hover:text-gold">Orders</Link> /
           </p>
           <h1 className="text-3xl font-medium text-green">
-            {garmentTypeLabel(order.garmentType)} — {order.customer.firstName} {order.customer.lastName}
+            {garmentSummary} — {order.customer.firstName} {order.customer.lastName}
           </h1>
           <div className="flex items-center gap-3 mt-2">
             <span className={`text-xs px-2 py-0.5 ${orderStatusColor(order.status)}`}>
               {orderStatusLabel(order.status)}
             </span>
             <span className="text-xs text-green-muted">{formatDate(order.createdAt)}</span>
+            {order.items.length > 1 && (
+              <span className="text-xs bg-cream px-2 py-0.5 border border-cream-dark text-green">
+                {order.items.length} garments
+              </span>
+            )}
           </div>
         </div>
         <div className="flex gap-2">
@@ -75,118 +71,138 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* Fabric */}
-          <div className="bg-white border border-cream-dark p-6">
-            <h2 className="section-title">Fabric</h2>
-            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
-              {[
-                ["Description", order.fabricDescription],
-                ["Fabric Code", order.fabricCode],
-                ["Colour", order.fabricColour],
-                ["Price per Metre", order.fabricPricePerMetre ? formatCurrency(Number(order.fabricPricePerMetre)) : null],
-                ["Meterage", order.fabricMeterage ? `${order.fabricMeterage}m` : null],
-                ["Fabric Total", fabricTotal ? formatCurrency(fabricTotal) : null],
-              ].map(([label, val]) =>
-                val ? (
-                  <div key={String(label)}>
-                    <div className="text-xs text-green-muted">{label}</div>
-                    <div className="text-sm text-green">{String(val)}</div>
-                  </div>
-                ) : null
-              )}
-            </div>
-          </div>
 
-          {/* Construction */}
-          <div className="bg-white border border-cream-dark p-6">
-            <h2 className="section-title">Construction</h2>
-            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
-              {[
-                ["Lining", order.lining ? `Yes${order.liningColour ? ` — ${order.liningColour}` : ""}` : "No lining"],
-                ["Lining Description", order.liningDescription],
-                ["Buttons", order.buttons],
-                ["Button Count", order.buttonCount ? String(order.buttonCount) : null],
-                ["Pockets", order.pockets],
-                ["Lapel Style", order.lapelStyle],
-                ["Vent Style", order.ventStyle],
-                ["Sleeve Buttons", order.sleeveButtons ? String(order.sleeveButtons) : null],
-                ["Waistband Style", order.waistbandStyle],
-                ["Hem Style", order.hemStyle],
-              ].map(([label, val]) =>
-                val ? (
-                  <div key={String(label)}>
-                    <div className="text-xs text-green-muted">{label}</div>
-                    <div className="text-sm text-green">{String(val)}</div>
-                  </div>
-                ) : null
-              )}
-            </div>
-            {order.additionalConstructionNotes && (
-              <div className="mt-4 pt-4 border-t border-cream-dark">
-                <div className="text-xs text-green-muted mb-1">Additional Construction Notes</div>
-                <div className="text-sm text-green whitespace-pre-line">{order.additionalConstructionNotes}</div>
-              </div>
-            )}
-          </div>
+          {/* Garments */}
+          {order.items.map((item, index) => {
+            const fabricCost =
+              item.fabricPricePerMetre && item.fabricMeterage
+                ? Number(item.fabricPricePerMetre) * Number(item.fabricMeterage)
+                : null;
+            const mFields = GARMENT_MEASUREMENTS[item.garmentType] ?? [];
+            const itemMeasurements = (item.measurements as Record<string, string> | null) ?? {};
+            const activeMeasurements = mFields.filter(({ key }) => itemMeasurements[key]);
 
-          {/* Measurements */}
-          <div className="bg-white border border-cream-dark p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="section-title mb-0">Measurements</h2>
-              <Link href={`/customers/${order.customer.id}/measurements`} className="text-xs text-gold hover:underline">
-                Edit →
-              </Link>
-            </div>
-            {order.useStoredMeasurements ? (
-              <>
-                {m ? (
-                  <div className="grid grid-cols-3 gap-x-6 gap-y-2">
-                    {measurementFields.map(([key, label]) => {
-                      const val = m[key];
-                      if (!val) return null;
-                      return (
-                        <div key={key} className="flex justify-between text-sm border-b border-cream-dark pb-1">
-                          <span className="text-green-muted text-xs">{label}</span>
-                          <span className="text-green font-medium">{String(val)}&Prime;</span>
+            return (
+              <div key={item.id} className="bg-white border border-cream-dark overflow-hidden">
+                {/* Garment header */}
+                <div className="flex items-center gap-3 px-6 py-3 bg-green text-cream">
+                  <span className="text-xs uppercase tracking-widest opacity-60">Garment {index + 1}</span>
+                  <span className="font-medium">{garmentTypeLabel(item.garmentType)}</span>
+                  <span className="text-xs opacity-60 ml-1 capitalize">{item.fabricPattern}</span>
+                  {item.itemSubtotal && (
+                    <span className="ml-auto text-xs text-gold">{formatCurrency(Number(item.itemSubtotal))} ex. VAT</span>
+                  )}
+                </div>
+
+                <div className="p-6 space-y-6">
+                  {/* Fabric */}
+                  <div>
+                    <h3 className="text-xs uppercase tracking-widest text-gold mb-3">Fabric</h3>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+                      {[
+                        ["Description", item.fabricDescription],
+                        ["Fabric Code", item.fabricCode],
+                        ["Colour", item.fabricColour],
+                        ["Price per Metre", item.fabricPricePerMetre ? formatCurrency(Number(item.fabricPricePerMetre)) : null],
+                        ["Meterage", item.fabricMeterage ? `${item.fabricMeterage}m` : null],
+                        ["Fabric Total", fabricCost ? formatCurrency(fabricCost) : null],
+                        ["Making Rate", item.makingRate ? formatCurrency(Number(item.makingRate)) : null],
+                        ["Item Subtotal", item.itemSubtotal ? formatCurrency(Number(item.itemSubtotal)) + " ex. VAT" : null],
+                      ].map(([label, val]) =>
+                        val ? (
+                          <div key={String(label)}>
+                            <div className="text-xs text-green-muted">{label}</div>
+                            <div className="text-sm text-green">{String(val)}</div>
+                          </div>
+                        ) : null
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Construction */}
+                  <div>
+                    <h3 className="text-xs uppercase tracking-widest text-gold mb-3">Construction</h3>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+                      {[
+                        ["Lining", item.lining ? `Yes${item.liningColour ? ` — ${item.liningColour}` : ""}` : "No lining"],
+                        item.liningDescription ? ["Lining Description", item.liningDescription] : null,
+                        item.buttons ? ["Buttons", item.buttons + (item.buttonCount ? ` (×${item.buttonCount})` : "")] : null,
+                        item.pockets ? ["Pockets", item.pockets] : null,
+                        item.lapelStyle ? ["Lapel Style", item.lapelStyle] : null,
+                        item.ventStyle ? ["Vent Style", item.ventStyle] : null,
+                        item.sleeveButtons ? ["Sleeve Buttons", String(item.sleeveButtons)] : null,
+                        item.waistbandStyle ? ["Waistband Style", item.waistbandStyle] : null,
+                        item.hemStyle ? ["Hem Style", item.hemStyle] : null,
+                      ].filter(Boolean).map((row) => {
+                        const [label, val] = row as [string, string];
+                        return (
+                          <div key={label}>
+                            <div className="text-xs text-green-muted">{label}</div>
+                            <div className="text-sm text-green">{val}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {item.additionalConstructionNotes && (
+                      <div className="mt-3 pt-3 border-t border-cream-dark">
+                        <div className="text-xs text-green-muted mb-1">Additional Notes</div>
+                        <p className="text-sm text-green whitespace-pre-line">{item.additionalConstructionNotes}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Measurements */}
+                  {activeMeasurements.length > 0 && (
+                    <div>
+                      <h3 className="text-xs uppercase tracking-widest text-gold mb-3">Measurements</h3>
+                      <div className="grid grid-cols-3 gap-x-6 gap-y-2">
+                        {activeMeasurements.map(({ key, label }) => (
+                          <div key={key} className="flex justify-between text-sm border-b border-cream-dark pb-1">
+                            <span className="text-green-muted text-xs">{label}</span>
+                            <span className="text-green font-medium">{itemMeasurements[key]}&Prime;</span>
+                          </div>
+                        ))}
+                      </div>
+                      {item.measurementNotes && (
+                        <div className="mt-3 pt-3 border-t border-cream-dark">
+                          <div className="text-xs text-green-muted mb-1">Measurement Notes</div>
+                          <p className="text-sm text-green whitespace-pre-line">{item.measurementNotes}</p>
                         </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-green-muted">No measurements on file for this customer.</p>
-                )}
-              </>
-            ) : (
-              <p className="text-sm text-green-muted">Custom measurements — see notes below.</p>
-            )}
-            {order.measurementNotes && (
-              <div className="mt-4 pt-4 border-t border-cream-dark">
-                <div className="text-xs text-green-muted mb-1">Order-specific notes / adjustments</div>
-                <div className="text-sm text-green whitespace-pre-line">{order.measurementNotes}</div>
-              </div>
-            )}
-          </div>
+                      )}
+                    </div>
+                  )}
 
-          {/* Sketch/images */}
-          {(order.sketchUrl || order.fabricSwatchUrl) && (
-            <div className="bg-white border border-cream-dark p-6">
-              <h2 className="section-title">Sketch & References</h2>
-              <div className="flex flex-wrap gap-4">
-                {order.sketchUrl && (
-                  <div>
-                    <div className="text-xs text-green-muted mb-1">Sketch</div>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={order.sketchUrl} alt="Sketch" className="max-w-xs max-h-64 object-contain border border-cream-dark" />
-                  </div>
-                )}
-                {order.fabricSwatchUrl && (
-                  <div>
-                    <div className="text-xs text-green-muted mb-1">Fabric Swatch</div>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={order.fabricSwatchUrl} alt="Swatch" className="max-w-xs max-h-64 object-contain border border-cream-dark" />
-                  </div>
-                )}
+                  {/* Images */}
+                  {(item.sketchUrl || item.fabricSwatchUrl) && (
+                    <div>
+                      <h3 className="text-xs uppercase tracking-widest text-gold mb-3">Sketch & References</h3>
+                      <div className="flex flex-wrap gap-4">
+                        {item.sketchUrl && (
+                          <div>
+                            <div className="text-xs text-green-muted mb-1">Sketch</div>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={item.sketchUrl} alt="Sketch" className="max-w-xs max-h-64 object-contain border border-cream-dark" />
+                          </div>
+                        )}
+                        {item.fabricSwatchUrl && (
+                          <div>
+                            <div className="text-xs text-green-muted mb-1">Fabric Swatch</div>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={item.fabricSwatchUrl} alt="Swatch" className="max-w-xs max-h-48 object-contain border border-cream-dark" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+            );
+          })}
+
+          {/* No items fallback */}
+          {order.items.length === 0 && (
+            <div className="bg-white border border-cream-dark p-6 text-sm text-green-muted">
+              No garments recorded. <Link href={`/orders/${order.id}/edit`} className="text-gold underline">Edit this order →</Link>
             </div>
           )}
         </div>
@@ -196,10 +212,26 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           <div className="bg-white border border-cream-dark p-6">
             <h2 className="section-title">Pricing</h2>
             <dl className="space-y-2">
+              {order.items.map((it, i) => (
+                <div key={it.id} className="flex justify-between text-sm">
+                  <span className="text-green-muted">
+                    {garmentTypeLabel(it.garmentType)}{order.items.length > 1 ? ` (${i + 1})` : ""}
+                  </span>
+                  <span className="text-green">
+                    {it.itemSubtotal ? formatCurrency(Number(it.itemSubtotal)) : "—"}
+                  </span>
+                </div>
+              ))}
+              {order.items.length > 1 && (
+                <div className="flex justify-between text-sm border-t border-cream-dark pt-2">
+                  <span className="text-green-muted">Garments subtotal</span>
+                  <span className="text-green">
+                    {formatCurrency(order.items.reduce((s, it) => s + (it.itemSubtotal ? Number(it.itemSubtotal) : 0), 0))}
+                  </span>
+                </div>
+              )}
               {[
-                ["Making Rate", order.makingRate ? formatCurrency(Number(order.makingRate)) : "—"],
                 ["Block Fee", order.blockFee !== null ? formatCurrency(Number(order.blockFee)) : "—"],
-                ["Fabric Cost", fabricTotal ? formatCurrency(fabricTotal) : "—"],
                 ["Subtotal ex. VAT", order.subtotalExVat ? formatCurrency(Number(order.subtotalExVat)) : "—"],
                 ["VAT (20%)", order.vatAmount ? formatCurrency(Number(order.vatAmount)) : "—"],
               ].map(([label, val]) => (
@@ -229,7 +261,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
               {balanceDue !== null && (
                 <div className={`flex justify-between text-sm font-medium pt-2 border-t border-cream-dark ${balanceDue > 0 ? "text-amber-700" : "text-green"}`}>
                   <span>Balance Due</span>
-                  <span>{formatCurrency(balanceDue)}</span>
+                  <span>{formatCurrency(Math.max(0, balanceDue))}</span>
                 </div>
               )}
             </dl>
@@ -262,6 +294,13 @@ export default async function OrderDetailPage({ params }: { params: { id: string
               <p className="text-sm text-green whitespace-pre-line">{order.internalNotes}</p>
             </div>
           )}
+
+          {/* Measurements link */}
+          <div className="bg-white border border-cream-dark p-4">
+            <Link href={`/customers/${order.customer.id}/measurements`} className="text-xs text-gold hover:underline">
+              View / edit customer body measurements →
+            </Link>
+          </div>
         </div>
       </div>
     </div>

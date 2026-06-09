@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { buildItemData } from "@/lib/orderUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -9,8 +10,9 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
     include: {
       customer: { include: { measurements: true } },
       preConsultation: true,
+      items: { orderBy: { sortOrder: "asc" } },
       appointments: { orderBy: { appointmentDate: "asc" } },
-      reminders: { orderBy: { dueDate: "asc" } },
+      reminders: { where: { completed: false }, orderBy: { dueDate: "asc" } },
     },
   });
   if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -19,7 +21,11 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const body = await req.json();
-  const dec = (v: unknown) => (v !== undefined && v !== "" && v !== null ? parseFloat(String(v)) : null);
+  const dec = (v: unknown) =>
+    v !== undefined && v !== "" && v !== null ? parseFloat(String(v)) : null;
+
+  // Delete existing items and recreate (simplest approach for small item counts)
+  await prisma.orderItem.deleteMany({ where: { orderFormId: params.id } });
 
   const order = await prisma.orderForm.update({
     where: { id: params.id },
@@ -27,30 +33,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       preConsultationId: body.preConsultationId || null,
       conductedBy: body.conductedBy,
       appointmentDate: body.appointmentDate ? new Date(body.appointmentDate) : null,
-      garmentType: body.garmentType,
-      fabricDescription: body.fabricDescription || null,
-      fabricCode: body.fabricCode || null,
-      fabricColour: body.fabricColour || null,
-      fabricPricePerMetre: dec(body.fabricPricePerMetre),
-      fabricMeterage: dec(body.fabricMeterage),
-      lining: body.lining ?? false,
-      liningColour: body.liningColour || null,
-      liningDescription: body.liningDescription || null,
-      buttons: body.buttons || null,
-      buttonCount: body.buttonCount ? parseInt(body.buttonCount) : null,
-      pockets: body.pockets || null,
-      lapelStyle: body.lapelStyle || null,
-      ventStyle: body.ventStyle || null,
-      sleeveButtons: body.sleeveButtons ? parseInt(body.sleeveButtons) : null,
-      waistbandStyle: body.waistbandStyle || null,
-      hemStyle: body.hemStyle || null,
-      additionalConstructionNotes: body.additionalConstructionNotes || null,
-      useStoredMeasurements: body.useStoredMeasurements ?? true,
-      measurementNotes: body.measurementNotes || null,
-      sketchUrl: body.sketchUrl || null,
-      inspirationImageUrls: body.inspirationImageUrls ?? null,
-      fabricSwatchUrl: body.fabricSwatchUrl || null,
-      makingRate: dec(body.makingRate),
+      garmentType: body.garmentType || null,
       blockFee: dec(body.blockFee),
       subtotalExVat: dec(body.subtotalExVat),
       vatAmount: dec(body.vatAmount),
@@ -61,18 +44,24 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       balancePaidDate: body.balancePaidDate ? new Date(body.balancePaidDate) : null,
       fullyPaid: body.fullyPaid ?? false,
       status: body.status,
-      estimatedCompletionDate: body.estimatedCompletionDate
-        ? new Date(body.estimatedCompletionDate)
-        : null,
+      estimatedCompletionDate: body.estimatedCompletionDate ? new Date(body.estimatedCompletionDate) : null,
       briefSentAt: body.briefSentAt ? new Date(body.briefSentAt) : null,
       fittingDate: body.fittingDate ? new Date(body.fittingDate) : null,
       completedAt: body.completedAt ? new Date(body.completedAt) : null,
       deliveredAt: body.deliveredAt ? new Date(body.deliveredAt) : null,
       internalNotes: body.internalNotes || null,
+      items: body.items?.length
+        ? {
+            create: body.items.map((item: Record<string, unknown>, i: number) =>
+              buildItemData(item, i)
+            ),
+          }
+        : undefined,
     },
     include: {
       customer: { include: { measurements: true } },
       preConsultation: true,
+      items: { orderBy: { sortOrder: "asc" } },
     },
   });
   return NextResponse.json(order);

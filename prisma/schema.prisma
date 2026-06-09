@@ -150,6 +150,7 @@ model PreConsultationForm {
   @@index([status])
 }
 
+// One order can contain multiple garments (OrderItems)
 model OrderForm {
   id                String      @id @default(cuid())
   createdAt         DateTime    @default(now())
@@ -160,7 +161,50 @@ model OrderForm {
   preConsultation   PreConsultationForm? @relation(fields: [preConsultationId], references: [id])
   conductedBy       String      @default("Carla")
   appointmentDate   DateTime?
-  garmentType       GarmentType
+
+  // Summary garment type (derived from first item — for list views)
+  garmentType       GarmentType?
+
+  // Block fee at order level (£350 on first-ever order, £0 if hasBlock)
+  blockFee          Decimal?    @db.Decimal(10, 2)
+
+  // Totals (summed from all items + block fee)
+  subtotalExVat     Decimal?    @db.Decimal(10, 2)
+  vatAmount         Decimal?    @db.Decimal(10, 2)
+  totalIncVat       Decimal?    @db.Decimal(10, 2)
+  depositRequired   Decimal?    @db.Decimal(10, 2)
+  depositPaid       Decimal?    @db.Decimal(10, 2)
+  depositPaidDate   DateTime?
+  balancePaidDate   DateTime?
+  fullyPaid         Boolean     @default(false)
+
+  // Status & Timeline
+  status                  OrderStatus @default(CONSULTATION_BOOKED)
+  estimatedCompletionDate DateTime?
+  briefSentAt             DateTime?
+  fittingDate             DateTime?
+  completedAt             DateTime?
+  deliveredAt             DateTime?
+  internalNotes           String?
+
+  items        OrderItem[]
+  appointments Appointment[]
+  reminders    Reminder[]
+
+  @@index([customerId])
+  @@index([status])
+}
+
+// One garment within an order
+model OrderItem {
+  id          String      @id @default(cuid())
+  createdAt   DateTime    @default(now())
+  sortOrder   Int         @default(0)
+  orderFormId String
+  orderForm   OrderForm   @relation(fields: [orderFormId], references: [id], onDelete: Cascade)
+
+  garmentType    GarmentType
+  fabricPattern  String      @default("plain") // "plain" | "check"
 
   // Fabric
   fabricDescription   String?
@@ -183,41 +227,21 @@ model OrderForm {
   hemStyle                    String?
   additionalConstructionNotes String?
 
-  // Measurements
-  useStoredMeasurements Boolean @default(true)
-  measurementNotes      String?
+  // Measurements specific to this garment (JSON: { "chest": "38.5", "waist": "30", ... })
+  // Pre-filled from customer's stored measurements; editable per order
+  measurements     Json?
+  measurementNotes String?
 
-  // Images stored as base64 text or URLs
+  // Images
   sketchUrl            String?
   inspirationImageUrls Json?
   fabricSwatchUrl      String?
 
-  // Pricing (makingRate and blockFee are ex-VAT)
-  makingRate      Decimal? @db.Decimal(10, 2)
-  blockFee        Decimal? @db.Decimal(10, 2)
-  subtotalExVat   Decimal? @db.Decimal(10, 2)
-  vatAmount       Decimal? @db.Decimal(10, 2)
-  totalIncVat     Decimal? @db.Decimal(10, 2)
-  depositRequired Decimal? @db.Decimal(10, 2)
-  depositPaid     Decimal? @db.Decimal(10, 2)
-  depositPaidDate DateTime?
-  balancePaidDate DateTime?
-  fullyPaid       Boolean  @default(false)
+  // Pricing (ex-VAT)
+  makingRate    Decimal?  @db.Decimal(10, 2)
+  itemSubtotal  Decimal?  @db.Decimal(10, 2) // makingRate + fabricCost
 
-  // Status & Timeline
-  status                  OrderStatus @default(CONSULTATION_BOOKED)
-  estimatedCompletionDate DateTime?
-  briefSentAt             DateTime?
-  fittingDate             DateTime?
-  completedAt             DateTime?
-  deliveredAt             DateTime?
-  internalNotes           String?
-
-  appointments Appointment[]
-  reminders    Reminder[]
-
-  @@index([customerId])
-  @@index([status])
+  @@index([orderFormId])
 }
 
 model Appointment {
