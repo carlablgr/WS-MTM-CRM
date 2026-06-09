@@ -245,13 +245,14 @@ export default function OrderFormWizard({
 
   const selectedCustomer = customers.find((c) => c.id === form.customerId);
 
-  // Auto-set block fee when customer changes
+  // Auto-set block fee: £350 × number of garments for new customers, £0 for returning
   useEffect(() => {
     if (!form.customerId) return;
     const c = customers.find((c) => c.id === form.customerId);
     if (!c) return;
-    setForm((f) => ({ ...f, blockFee: c.hasBlock ? "0" : String(BLOCK_FEE) }));
-  }, [form.customerId, customers]);
+    const garmentCount = Math.max(1, items.length);
+    setForm((f) => ({ ...f, blockFee: c.hasBlock ? "0" : String(BLOCK_FEE * garmentCount) }));
+  }, [form.customerId, customers, items.length]);
 
   // ── Item helpers ──────────────────────────────────────────────────────────
   function updateItem(index: number, patch: Partial<OrderItemData>) {
@@ -433,7 +434,7 @@ export default function OrderFormWizard({
 
           {selectedCustomer && !selectedCustomer.hasBlock && (
             <div className="warning-yellow">
-              First order for this customer — block fee of £350 ex. VAT will be added automatically.
+              First order for this customer — block fee of £{BLOCK_FEE} ex. VAT applies per garment (calculated automatically on the Pricing step).
             </div>
           )}
 
@@ -554,7 +555,9 @@ export default function OrderFormWizard({
                     onChange={setF("blockFee")}
                   />
                   <span className="text-xs text-green-muted">
-                    {selectedCustomer?.hasBlock ? "Block already cut — fee waived" : "First order — £350 applies"}
+                    {selectedCustomer?.hasBlock
+                      ? "Block already cut — fee waived"
+                      : `First order — £${BLOCK_FEE} × ${items.length} garment${items.length !== 1 ? "s" : ""} = £${BLOCK_FEE * items.length}`}
                   </span>
                 </div>
               </div>
