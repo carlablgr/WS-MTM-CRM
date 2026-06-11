@@ -10,6 +10,7 @@ import {
   appointmentTypeLabel,
   reminderTypeLabel,
 } from "@/lib/format";
+import { calculateMtoOrderTotals } from "@/lib/mtoUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,8 @@ export default async function DashboardPage() {
     upcomingAppointments,
     overdueReminders,
     recentCustomers,
+    activeMtoOrders,
+    mtoOrdersForBalance,
   ] = await Promise.all([
     prisma.customer.count(),
     prisma.orderForm.count({ where: { status: { notIn: ["COMPLETE", "DELIVERED"] } } }),
@@ -45,9 +48,20 @@ export default async function DashboardPage() {
       take: 6,
       include: { _count: { select: { orders: true } } },
     }),
+    prisma.mtoOrder.count({ where: { status: { notIn: ["COLLECTED"] } } }),
+    prisma.mtoOrder.findMany({
+      where: { fullyPaid: false },
+      include: { items: { select: { totalIncVat: true } } },
+    }),
   ]);
 
   const statusMap = Object.fromEntries(ordersByStatus.map((s) => [s.status, s._count.id]));
+
+  const mtoOutstandingBalance = mtoOrdersForBalance.reduce((sum, o) => {
+    const totals = calculateMtoOrderTotals(o.items.map((it) => Number(it.totalIncVat ?? 0)));
+    const balance = totals.grandTotal - Number(o.depositPaid ?? 0);
+    return sum + Math.max(0, balance);
+  }, 0);
 
   return (
     <div>
@@ -78,7 +92,9 @@ export default async function DashboardPage() {
       {/* Order pipeline */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs uppercase tracking-widest text-green-muted">Order Pipeline</h2>
+          <h2 className="text-xs uppercase tracking-widest text-green-muted">
+            MTM Order Pipeline <span className="text-green-muted/60 normal-case">— bespoke, Tailor, measurements required, 6–8 weeks</span>
+          </h2>
           <Link href="/orders" className="text-xs text-gold hover:underline">View all →</Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
@@ -100,6 +116,32 @@ export default async function DashboardPage() {
               <div className="text-xs text-green-muted mt-1 leading-tight">{orderStatusLabel(s)}</div>
             </Link>
           ))}
+        </div>
+      </div>
+
+      {/* MTO summary */}
+      <div className="mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xs uppercase tracking-widest text-green-muted">
+            MTO Orders <span className="text-green-muted/60 normal-case">— factory, no measurements, 8–10 weeks</span>
+          </h2>
+          <Link href="/mto-orders" className="text-xs text-gold hover:underline">View all →</Link>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Link
+            href="/mto-orders"
+            className="bg-white border border-cream-dark p-5 hover:border-gold transition-colors"
+          >
+            <div className="text-3xl font-medium text-green mb-1">{activeMtoOrders}</div>
+            <div className="text-xs uppercase tracking-widest text-green-muted">Active MTO Orders</div>
+          </Link>
+          <Link
+            href="/mto-orders"
+            className="bg-white border border-cream-dark p-5 hover:border-gold transition-colors"
+          >
+            <div className="text-3xl font-medium text-green mb-1">{formatCurrency(mtoOutstandingBalance)}</div>
+            <div className="text-xs uppercase tracking-widest text-green-muted">Outstanding MTO Balances</div>
+          </Link>
         </div>
       </div>
 

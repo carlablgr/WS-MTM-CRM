@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       orderFormId: body.orderFormId || null,
       appointmentDate: new Date(body.appointmentDate),
       appointmentType: body.appointmentType,
-      location: body.location ?? "19 Great Queen Street, London WC2B",
+      location: body.location ?? "38 Great Queen Street, London WC2B 5AA",
       conductedBy: body.conductedBy ?? "Carla",
       notes: body.notes || null,
       reminderSent: body.reminderSent ?? false,

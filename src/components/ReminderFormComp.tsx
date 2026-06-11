@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 const REMINDER_TYPES = [
   { value: "FOLLOW_UP_WITH_CUSTOMER", label: "Follow Up with Customer" },
-  { value: "CHASE_ANTHONY", label: "Chase Anthony" },
+  { value: "CHASE_ANTHONY", label: "Chase Tailor" },
   { value: "FITTING_TO_BOOK", label: "Fitting to Book" },
   { value: "BALANCE_PAYMENT_DUE", label: "Balance Payment Due" },
   { value: "ORDER_READY_TO_COLLECT", label: "Order Ready to Collect" },

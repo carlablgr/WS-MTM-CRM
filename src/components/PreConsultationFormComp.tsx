@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import StaffMemberSelect from "./StaffMemberSelect";
 
 const GARMENT_TYPES = [
   { value: "JACKET", label: "Jacket" },
@@ -117,7 +118,10 @@ export default function PreConsultationFormComp({
         <div className="grid grid-cols-2 gap-4">
           <div className="field">
             <label className="label">Completed By</label>
-            <input className="input" {...field("completedBy")} />
+            <StaffMemberSelect
+              value={form.completedBy}
+              onChange={(v) => setForm({ ...form, completedBy: v })}
+            />
           </div>
           <div className="field">
             <label className="label">Garment Type</label>

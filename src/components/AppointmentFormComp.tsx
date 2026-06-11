@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import StaffMemberSelect from "./StaffMemberSelect";
 
 const APPOINTMENT_TYPES = [
-  { value: "PRE_CONSULTATION_CALL", label: "Pre-Consultation Call" },
-  { value: "IN_STORE_CONSULTATION", label: "In-Store Consultation" },
+  { value: "CONSULTATION", label: "Consultation" },
+  { value: "MADE_TO_MEASURE", label: "Made to Measure" },
   { value: "FITTING", label: "Fitting" },
-  { value: "COLLECTION", label: "Collection" },
+  { value: "SECOND_FITTING", label: "Second Fitting" },
+  { value: "FINAL_FITTING", label: "Final Fitting" },
 ];
 
 const APPOINTMENT_STATUSES = [
@@ -59,8 +61,8 @@ export default function AppointmentFormComp({
     customerId: existing?.customerId ?? defaultCustomerId ?? "",
     orderFormId: existing?.orderFormId ?? defaultOrderId ?? "",
     appointmentDate: toLocalDatetime(existing?.appointmentDate ?? null),
-    appointmentType: existing?.appointmentType ?? "IN_STORE_CONSULTATION",
-    location: existing?.location ?? "19 Great Queen Street, London WC2B",
+    appointmentType: existing?.appointmentType ?? "CONSULTATION",
+    location: existing?.location ?? "38 Great Queen Street, London WC2B 5AA",
     conductedBy: existing?.conductedBy ?? "Carla",
     notes: existing?.notes ?? "",
     reminderSent: existing?.reminderSent ?? false,
@@ -164,7 +166,10 @@ export default function AppointmentFormComp({
           </div>
           <div className="field">
             <label className="label">Conducted By</label>
-            <input className="input" value={form.conductedBy} onChange={set("conductedBy")} />
+            <StaffMemberSelect
+              value={form.conductedBy}
+              onChange={(v) => setForm((f) => ({ ...f, conductedBy: v }))}
+            />
           </div>
         </div>
 

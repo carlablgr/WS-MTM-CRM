@@ -17,13 +17,13 @@ export const MAKING_RATES: Record<string, Record<FabricPattern, MakingRate>> = {
       label: "Trousers (plain)",
       exVat: 457.5,
       estimated: true,
-      note: "Trouser making rate is estimated — confirm with Anthony before quoting",
+      note: "Trouser making rate is estimated — confirm with Tailor before quoting",
     },
     check: {
       label: "Trousers (check)",
       exVat: 517.5,
       estimated: true,
-      note: "Trouser making rate is estimated — confirm with Anthony before quoting",
+      note: "Trouser making rate is estimated — confirm with Tailor before quoting",
     },
   },
   WAISTCOAT: {
@@ -43,7 +43,7 @@ export const MAKING_RATES: Record<string, Record<FabricPattern, MakingRate>> = {
     check: {
       label: "Skirt (check)",
       exVat: 480,
-      note: "Skirt fabric meterage to be confirmed with Anthony",
+      note: "Skirt fabric meterage to be confirmed with Tailor",
     },
   },
 };

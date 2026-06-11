@@ -12,9 +12,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <div className="min-h-screen flex">
-          <Sidebar />
-          <main className="flex-1 min-w-0 bg-cream">
-            <div className="mx-auto max-w-6xl px-8 py-10">{children}</div>
+          <div className="no-print">
+            <Sidebar />
+          </div>
+          <main className="flex-1 min-w-0 bg-cream print:bg-white">
+            <div className="mx-auto max-w-6xl px-8 py-10 print:max-w-none print:p-0">{children}</div>
           </main>
         </div>
       </body>

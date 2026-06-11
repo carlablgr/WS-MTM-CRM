@@ -9,6 +9,8 @@ import {
   orderStatusColor,
 } from "@/lib/format";
 import { GARMENT_MEASUREMENTS } from "@/lib/makingRates";
+import FinalizeButton from "@/components/FinalizeButton";
+import DeleteButton from "@/components/DeleteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -59,13 +61,25 @@ export default async function OrderDetailPage({ params }: { params: { id: string
             )}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Link href={`/orders/${order.id}/brief`} target="_blank" className="btn-secondary text-sm">
             Tailor Brief PDF
           </Link>
           <Link href={`/orders/${order.id}/edit`} className="btn-primary text-sm">
             Edit
           </Link>
+          <FinalizeButton
+            endpoint={`/api/orders/${order.id}/finalize`}
+            finalized={order.finalized}
+            label="Finalize & Send"
+            finalizedLabel="Finalized"
+          />
+          <DeleteButton
+            endpoint={`/api/orders/${order.id}`}
+            label="Delete Order"
+            confirmMessage="Are you sure you want to delete this MTM order? This cannot be undone."
+            redirectTo={`/customers/${order.customer.id}`}
+          />
         </div>
       </div>
 

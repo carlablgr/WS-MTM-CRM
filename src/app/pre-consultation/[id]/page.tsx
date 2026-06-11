@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDate, garmentTypeLabel, preConsultationStatusLabel } from "@/lib/format";
+import FinalizeButton from "@/components/FinalizeButton";
 
 export const dynamic = "force-dynamic";
 
@@ -41,13 +42,19 @@ export default async function PreConsultationDetailPage({ params }: { params: { 
             {formatDate(form.createdAt)}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Link href={`/pre-consultation/${form.id}/print`} target="_blank" className="btn-secondary text-sm">
             Export PDF
           </Link>
           <Link href={`/pre-consultation/${form.id}/edit`} className="btn-primary text-sm">
             Edit
           </Link>
+          <FinalizeButton
+            endpoint={`/api/pre-consultation/${form.id}/finalize`}
+            finalized={form.finalized}
+            label="Finalize & Send"
+            finalizedLabel="Finalized"
+          />
         </div>
       </div>
 

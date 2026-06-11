@@ -83,10 +83,11 @@ export function preConsultationStatusLabel(status: string): string {
 
 export function appointmentTypeLabel(type: string): string {
   const map: Record<string, string> = {
-    PRE_CONSULTATION_CALL: "Pre-Consultation Call",
-    IN_STORE_CONSULTATION: "In-Store Consultation",
+    CONSULTATION: "Consultation",
+    MADE_TO_MEASURE: "Made to Measure",
     FITTING: "Fitting",
-    COLLECTION: "Collection",
+    SECOND_FITTING: "Second Fitting",
+    FINAL_FITTING: "Final Fitting",
   };
   return map[type] ?? type;
 }
@@ -101,10 +102,32 @@ export function appointmentStatusLabel(status: string): string {
   return map[status] ?? status;
 }
 
+export function mtoStatusLabel(status: string): string {
+  const map: Record<string, string> = {
+    DEPOSIT_TAKEN: "Deposit Taken",
+    SUBMITTED_TO_FACTORY: "Submitted to Factory",
+    IN_PRODUCTION: "In Production",
+    ARRIVED: "Arrived",
+    COLLECTED: "Collected",
+  };
+  return map[status] ?? status;
+}
+
+export function mtoStatusColor(status: string): string {
+  const map: Record<string, string> = {
+    DEPOSIT_TAKEN: "bg-amber-50 text-amber-800",
+    SUBMITTED_TO_FACTORY: "bg-blue-50 text-blue-800",
+    IN_PRODUCTION: "bg-indigo-50 text-indigo-800",
+    ARRIVED: "bg-purple-50 text-purple-800",
+    COLLECTED: "bg-emerald-50 text-emerald-800",
+  };
+  return map[status] ?? "bg-stone-100 text-stone-700";
+}
+
 export function reminderTypeLabel(type: string): string {
   const map: Record<string, string> = {
     FOLLOW_UP_WITH_CUSTOMER: "Follow Up with Customer",
-    CHASE_ANTHONY: "Chase Anthony",
+    CHASE_ANTHONY: "Chase Tailor",
     FITTING_TO_BOOK: "Fitting to Book",
     BALANCE_PAYMENT_DUE: "Balance Payment Due",
     ORDER_READY_TO_COLLECT: "Order Ready to Collect",

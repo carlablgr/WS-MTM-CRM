@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import StaffMemberSelect from "./StaffMemberSelect";
 import {
   MAKING_RATES,
   FABRIC_METERAGE_DEFAULTS,
@@ -459,7 +460,10 @@ export default function OrderFormWizard({
             </div>
             <div className="field">
               <label className="label">Conducted By</label>
-              <input className="input" value={form.conductedBy} onChange={setF("conductedBy")} />
+              <StaffMemberSelect
+                value={form.conductedBy}
+                onChange={(v) => setForm((f) => ({ ...f, conductedBy: v }))}
+              />
             </div>
           </div>
         </div>
@@ -834,7 +838,7 @@ function GarmentCard({
                   </div>
                   <div className="field">
                     <label className="label">
-                      Meterage{item.garmentType === "SKIRT" && <span className="text-amber-700 ml-1">— confirm with Anthony</span>}
+                      Meterage{item.garmentType === "SKIRT" && <span className="text-amber-700 ml-1">— confirm with Tailor</span>}
                     </label>
                     <input type="number" step="0.25" min="0" className="input" value={item.fabricMeterage} onChange={set("fabricMeterage")} />
                   </div>

@@ -21,8 +21,13 @@ const links = [
   },
   {
     href: "/orders",
-    label: "Orders",
+    label: "MTM Orders",
     icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z",
+  },
+  {
+    href: "/mto-orders",
+    label: "MTO Orders",
+    icon: "M20 7h-3V5a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2H4a1 1 0 0 0-1 1v3a3 3 0 0 0 3 3h.341A4 4 0 0 0 10 17.659V20H8v2h8v-2h-2v-2.341A4 4 0 0 0 17.659 14H18a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM9 5h6v2H9zm10 6a1 1 0 0 1-1 1h-1V9h2zM6 12H5a1 1 0 0 1-1-1V9h2z",
   },
   {
     href: "/appointments",
@@ -83,7 +88,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="px-6 py-4 border-t border-green-light text-xs text-cream/40">
-        19 Great Queen Street, London WC2B
+        38 Great Queen Street, London WC2B 5AA
       </div>
     </aside>
   );

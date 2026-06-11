@@ -12,8 +12,12 @@ import {
   appointmentStatusLabel,
   reminderTypeLabel,
   preConsultationStatusLabel,
+  mtoStatusLabel,
+  mtoStatusColor,
 } from "@/lib/format";
+import { calculateMtoOrderTotals } from "@/lib/mtoUtils";
 import CustomerActions from "@/components/CustomerActions";
+import NewOrderMenu from "@/components/NewOrderMenu";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +33,10 @@ export default async function CustomerProfilePage({
       orders: {
         orderBy: { createdAt: "desc" },
         include: { preConsultation: { select: { id: true } } },
+      },
+      mtoOrders: {
+        orderBy: { createdAt: "desc" },
+        include: { items: { orderBy: { sortOrder: "asc" } } },
       },
       preConsultations: { orderBy: { createdAt: "desc" } },
       appointments: { orderBy: { appointmentDate: "asc" } },
@@ -136,12 +144,7 @@ export default async function CustomerProfilePage({
               >
                 New Pre-Consultation
               </Link>
-              <Link
-                href={`/orders/new?customerId=${customer.id}`}
-                className="block w-full btn-primary text-center text-sm"
-              >
-                New Order
-              </Link>
+              <NewOrderMenu customerId={customer.id} />
               <Link
                 href={`/appointments/new?customerId=${customer.id}`}
                 className="block w-full btn-secondary text-center text-sm"
@@ -189,19 +192,19 @@ export default async function CustomerProfilePage({
             )}
           </div>
 
-          {/* Orders */}
+          {/* MTM Orders */}
           <div className="bg-white border border-cream-dark">
             <div className="flex items-center justify-between px-6 py-4 border-b border-cream-dark">
-              <h2 className="section-title mb-0">Orders ({customer.orders.length})</h2>
+              <h2 className="section-title mb-0">MTM Orders ({customer.orders.length})</h2>
               <Link
                 href={`/orders/new?customerId=${customer.id}`}
                 className="text-xs text-gold hover:underline"
               >
-                New order →
+                New MTM order →
               </Link>
             </div>
             {customer.orders.length === 0 ? (
-              <div className="px-6 py-6 text-sm text-green-muted">No orders yet.</div>
+              <div className="px-6 py-6 text-sm text-green-muted">No MTM orders yet.</div>
             ) : (
               <ul className="divide-y divide-cream-dark">
                 {customer.orders.map((o) => (
@@ -225,6 +228,48 @@ export default async function CustomerProfilePage({
                     </div>
                   </li>
                 ))}
+              </ul>
+            )}
+          </div>
+
+          {/* MTO Orders */}
+          <div className="bg-white border border-cream-dark">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-cream-dark">
+              <h2 className="section-title mb-0">MTO Orders ({customer.mtoOrders.length})</h2>
+              <Link
+                href={`/mto-orders/new?customerId=${customer.id}`}
+                className="text-xs text-gold hover:underline"
+              >
+                New MTO order →
+              </Link>
+            </div>
+            {customer.mtoOrders.length === 0 ? (
+              <div className="px-6 py-6 text-sm text-green-muted">No MTO orders yet.</div>
+            ) : (
+              <ul className="divide-y divide-cream-dark">
+                {customer.mtoOrders.map((o) => {
+                  const totals = calculateMtoOrderTotals(o.items.map((it) => Number(it.totalIncVat ?? 0)));
+                  return (
+                    <li key={o.id} className="px-6 py-4 flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-medium text-green">
+                          {o.items.map((it) => it.garmentName).join(", ") || "MTO Order"}
+                        </div>
+                        <div className="text-xs text-green-muted mt-0.5">
+                          {formatDate(o.createdAt)} · {formatCurrency(totals.grandTotal)} inc. VAT
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-xs px-2 py-0.5 ${mtoStatusColor(o.status)}`}>
+                          {mtoStatusLabel(o.status)}
+                        </span>
+                        <Link href={`/mto-orders/${o.id}`} className="text-xs text-gold hover:underline">
+                          View →
+                        </Link>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
