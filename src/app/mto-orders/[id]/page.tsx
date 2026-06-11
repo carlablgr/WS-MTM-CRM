@@ -5,6 +5,7 @@ import { formatDate, formatCurrency, mtoStatusColor } from "@/lib/format";
 import { calculateMtoOrderTotals, mtoEstimatedArrival, MTO_STATUSES } from "@/lib/mtoUtils";
 import DeleteButton from "@/components/DeleteButton";
 import StatusSelect from "@/components/StatusSelect";
+import DraftEmailButton from "@/components/DraftEmailButton";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,15 @@ export default async function MtoOrderDetailPage({ params }: { params: { id: str
           <Link href={`/mto-orders/${order.id}/edit`} className="btn-primary text-sm">
             Edit
           </Link>
+          <DraftEmailButton
+            label="Draft Email"
+            options={[
+              { label: "Order Confirmation", kind: "order-confirmation" },
+              { label: "Order Ready", kind: "order-ready" },
+              { label: "Chase Update", kind: "chase-update" },
+            ]}
+            payload={{ orderId: order.id, orderType: "mto" }}
+          />
           <DeleteButton
             endpoint={`/api/mto-orders/${order.id}`}
             label="Delete Order"

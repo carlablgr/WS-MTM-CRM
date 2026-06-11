@@ -12,6 +12,7 @@ import { ORDER_STATUSES } from "@/components/OrderFormWizard";
 import FinalizeButton from "@/components/FinalizeButton";
 import DeleteButton from "@/components/DeleteButton";
 import StatusSelect from "@/components/StatusSelect";
+import DraftEmailButton from "@/components/DraftEmailButton";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,15 @@ export default async function OrderDetailPage({ params }: { params: { id: string
             finalized={order.finalized}
             label="Finalize & Send"
             finalizedLabel="Finalized"
+          />
+          <DraftEmailButton
+            label="Draft Email"
+            options={[
+              { label: "Order Confirmation", kind: "order-confirmation" },
+              { label: "Order Ready", kind: "order-ready" },
+              { label: "Chase Update", kind: "chase-update" },
+            ]}
+            payload={{ orderId: order.id, orderType: "mtm" }}
           />
           <DeleteButton
             endpoint={`/api/orders/${order.id}`}

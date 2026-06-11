@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendPreConsultationSummaryEmail } from "@/lib/email/sendPreConsultationSummary";
 
 export const dynamic = "force-dynamic";
 
@@ -15,12 +14,6 @@ export async function POST(_: NextRequest, { params }: { params: { id: string } 
 
   if (form.finalized) {
     return NextResponse.json({ ok: true, alreadyFinalized: true });
-  }
-
-  try {
-    await sendPreConsultationSummaryEmail(form);
-  } catch (err) {
-    console.error(`Failed to send pre-consultation summary email for form ${form.id}:`, err);
   }
 
   const updated = await prisma.preConsultationForm.update({

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendOrderConfirmationEmail } from "@/lib/email/sendOrderConfirmation";
 
 export const dynamic = "force-dynamic";
 
@@ -16,12 +15,6 @@ export async function POST(_: NextRequest, { params }: { params: { id: string } 
 
   if (order.finalized) {
     return NextResponse.json({ ok: true, alreadyFinalized: true });
-  }
-
-  try {
-    await sendOrderConfirmationEmail(order);
-  } catch (err) {
-    console.error(`Failed to send order confirmation email for order ${order.id}:`, err);
   }
 
   const updated = await prisma.orderForm.update({

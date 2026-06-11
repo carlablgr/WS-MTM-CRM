@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime, appointmentTypeLabel, appointmentStatusLabel } from "@/lib/format";
+import DraftEmailButton from "@/components/DraftEmailButton";
 
 export const dynamic = "force-dynamic";
 
@@ -73,9 +74,16 @@ export default async function AppointmentsPage() {
               </td>
               <td className="table-td text-green-muted text-xs max-w-xs truncate">{a.notes ?? "—"}</td>
               <td className="table-td">
-                <Link href={`/appointments/${a.id}/edit`} className="text-xs text-gold hover:underline">
-                  Edit →
-                </Link>
+                <div className="flex items-center gap-3">
+                  <DraftEmailButton
+                    label="Draft Reminder"
+                    options={[{ label: "Appointment Reminder", kind: "appointment-reminder" }]}
+                    payload={{ appointmentId: a.id }}
+                  />
+                  <Link href={`/appointments/${a.id}/edit`} className="text-xs text-gold hover:underline">
+                    Edit →
+                  </Link>
+                </div>
               </td>
             </tr>
           ))}

@@ -18,6 +18,7 @@ import {
 import { calculateMtoOrderTotals } from "@/lib/mtoUtils";
 import CustomerActions from "@/components/CustomerActions";
 import NewOrderMenu from "@/components/NewOrderMenu";
+import DraftEmailButton from "@/components/DraftEmailButton";
 
 export const dynamic = "force-dynamic";
 
@@ -82,7 +83,17 @@ export default async function CustomerProfilePage({
             </span>
           )}
         </div>
-        <CustomerActions customerId={customer.id} />
+        <div className="flex items-center gap-2">
+          <DraftEmailButton
+            label="Draft Email"
+            options={[
+              { label: "Follow Up", kind: "customer-follow-up" },
+              { label: "New Collection", kind: "customer-new-collection" },
+            ]}
+            payload={{ customerId: customer.id }}
+          />
+          <CustomerActions customerId={customer.id} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
