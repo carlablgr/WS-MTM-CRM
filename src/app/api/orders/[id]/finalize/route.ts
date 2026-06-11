@@ -18,7 +18,11 @@ export async function POST(_: NextRequest, { params }: { params: { id: string } 
     return NextResponse.json({ ok: true, alreadyFinalized: true });
   }
 
-  await sendOrderConfirmationEmail(order);
+  try {
+    await sendOrderConfirmationEmail(order);
+  } catch (err) {
+    console.error(`Failed to send order confirmation email for order ${order.id}:`, err);
+  }
 
   const updated = await prisma.orderForm.update({
     where: { id: params.id },

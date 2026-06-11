@@ -17,7 +17,11 @@ export async function POST(_: NextRequest, { params }: { params: { id: string } 
     return NextResponse.json({ ok: true, alreadyFinalized: true });
   }
 
-  await sendPreConsultationSummaryEmail(form);
+  try {
+    await sendPreConsultationSummaryEmail(form);
+  } catch (err) {
+    console.error(`Failed to send pre-consultation summary email for form ${form.id}:`, err);
+  }
 
   const updated = await prisma.preConsultationForm.update({
     where: { id: params.id },
