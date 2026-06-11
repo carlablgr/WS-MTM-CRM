@@ -1,4 +1,4 @@
-import { resend, FROM_EMAIL, STUDIO_EMAIL } from "@/lib/resend";
+import { sendMail, STUDIO_EMAIL } from "@/lib/mailer";
 import { renderEmailLayout, field, paragraph } from "./layout";
 import { formatCurrency, formatDate, garmentTypeLabel } from "@/lib/format";
 import { renderOrderSummaryPdf } from "@/lib/pdf/renderOrderSummaryPdf";
@@ -35,8 +35,7 @@ export async function sendOrderConfirmationEmail(order: OrderWithDetails) {
 
   const pdfBuffer = await renderOrderSummaryPdf(order);
 
-  await resend.emails.send({
-    from: FROM_EMAIL,
+  await sendMail({
     to: STUDIO_EMAIL,
     subject: `New MTM Order — ${customerName} — ${garmentSummary}`,
     html,

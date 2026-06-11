@@ -1,4 +1,4 @@
-import { resend, FROM_EMAIL, STUDIO_EMAIL } from "@/lib/resend";
+import { sendMail, STUDIO_EMAIL } from "@/lib/mailer";
 import { renderEmailLayout, field, paragraph } from "./layout";
 import { formatDate, garmentTypeLabel } from "@/lib/format";
 import type { Customer, OrderForm, OrderItem } from "@prisma/client";
@@ -28,8 +28,7 @@ export async function sendEtaChaseEmail(order: OrderWithDetails) {
     bodyHtml,
   });
 
-  await resend.emails.send({
-    from: FROM_EMAIL,
+  await sendMail({
     to: STUDIO_EMAIL,
     subject: `Chase Tailor — ${customerName} — ${garmentSummary}`,
     html,

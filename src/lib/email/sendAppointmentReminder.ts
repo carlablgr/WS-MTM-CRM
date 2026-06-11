@@ -1,4 +1,4 @@
-import { resend, FROM_EMAIL, STUDIO_EMAIL } from "@/lib/resend";
+import { sendMail, STUDIO_EMAIL } from "@/lib/mailer";
 import { renderEmailLayout, paragraph, field } from "./layout";
 import { formatDate } from "@/lib/format";
 import type { Appointment, Customer } from "@prisma/client";
@@ -47,8 +47,7 @@ export async function sendAppointmentReminderEmail(appointment: AppointmentWithC
     bodyHtml,
   });
 
-  await resend.emails.send({
-    from: FROM_EMAIL,
+  await sendMail({
     to: appointment.customer.email,
     cc: STUDIO_EMAIL,
     subject: `Your appointment at Walker Slater — ${formatDate(appointment.appointmentDate)}`,

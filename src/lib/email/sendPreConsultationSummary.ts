@@ -1,4 +1,4 @@
-import { resend, FROM_EMAIL, STUDIO_EMAIL } from "@/lib/resend";
+import { sendMail, STUDIO_EMAIL } from "@/lib/mailer";
 import { renderEmailLayout, field, paragraph } from "./layout";
 import { garmentTypeLabel } from "@/lib/format";
 import type { Customer, PreConsultationForm } from "@prisma/client";
@@ -28,8 +28,7 @@ export async function sendPreConsultationSummaryEmail(form: PreConsultationWithC
     bodyHtml,
   });
 
-  await resend.emails.send({
-    from: FROM_EMAIL,
+  await sendMail({
     to: STUDIO_EMAIL,
     subject: `Pre-Consultation Summary — ${customerName} — ${garment}`,
     html,
