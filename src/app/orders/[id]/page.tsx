@@ -5,12 +5,13 @@ import {
   formatDate,
   formatCurrency,
   garmentTypeLabel,
-  orderStatusLabel,
   orderStatusColor,
 } from "@/lib/format";
 import { GARMENT_MEASUREMENTS } from "@/lib/makingRates";
+import { ORDER_STATUSES } from "@/components/OrderFormWizard";
 import FinalizeButton from "@/components/FinalizeButton";
 import DeleteButton from "@/components/DeleteButton";
+import StatusSelect from "@/components/StatusSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -50,9 +51,12 @@ export default async function OrderDetailPage({ params }: { params: { id: string
             {garmentSummary} — {order.customer.firstName} {order.customer.lastName}
           </h1>
           <div className="flex items-center gap-3 mt-2">
-            <span className={`text-xs px-2 py-0.5 ${orderStatusColor(order.status)}`}>
-              {orderStatusLabel(order.status)}
-            </span>
+            <StatusSelect
+              endpoint={`/api/orders/${order.id}/status`}
+              value={order.status}
+              options={ORDER_STATUSES}
+              colorClass={orderStatusColor(order.status)}
+            />
             <span className="text-xs text-green-muted">{formatDate(order.createdAt)}</span>
             {order.items.length > 1 && (
               <span className="text-xs bg-cream px-2 py-0.5 border border-cream-dark text-green">

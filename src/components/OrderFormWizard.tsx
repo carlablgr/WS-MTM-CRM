@@ -21,7 +21,7 @@ const GARMENT_TYPES = [
   { value: "FULL_LENGTH_COAT", label: "Full Length Coat" },
 ];
 
-const ORDER_STATUSES = [
+export const ORDER_STATUSES = [
   { value: "CONSULTATION_BOOKED", label: "Consultation Booked" },
   { value: "DEPOSIT_TAKEN", label: "Deposit Taken" },
   { value: "BRIEF_SENT_TO_TAILOR", label: "Brief Sent to Tailor" },

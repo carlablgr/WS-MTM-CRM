@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatDate, formatCurrency, mtoStatusLabel, mtoStatusColor } from "@/lib/format";
-import { calculateMtoOrderTotals, mtoEstimatedArrival } from "@/lib/mtoUtils";
+import { formatDate, formatCurrency, mtoStatusColor } from "@/lib/format";
+import { calculateMtoOrderTotals, mtoEstimatedArrival, MTO_STATUSES } from "@/lib/mtoUtils";
 import DeleteButton from "@/components/DeleteButton";
+import StatusSelect from "@/components/StatusSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -32,9 +33,12 @@ export default async function MtoOrderDetailPage({ params }: { params: { id: str
             {order.items.map((it) => it.garmentName).join(", ") || "MTO Order"} — {order.customer.firstName} {order.customer.lastName}
           </h1>
           <div className="flex items-center gap-3 mt-2">
-            <span className={`text-xs px-2 py-0.5 ${mtoStatusColor(order.status)}`}>
-              {mtoStatusLabel(order.status)}
-            </span>
+            <StatusSelect
+              endpoint={`/api/mto-orders/${order.id}/status`}
+              value={order.status}
+              options={MTO_STATUSES}
+              colorClass={mtoStatusColor(order.status)}
+            />
             <span className="text-xs bg-green text-cream px-2 py-0.5 uppercase tracking-widest">
               Made to Order
             </span>
