@@ -23,3 +23,8 @@ prisma/*.db-journal
 
 # TypeScript
 tsconfig.tsbuildinfo
+
+# Local Claude session artifacts
+.claude/
+walker-slater-brand-audit.docx
+walker-slater-brand-audit.html
