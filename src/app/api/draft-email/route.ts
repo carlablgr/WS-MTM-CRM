@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 const SIGN_OFF = "Walker Slater Covent Garden";
 const ADDRESS = "38 Great Queen Street, London WC2B 5AA";
+const PHONE = "+44 (0) 203 754 9787";
 
 interface Draft {
   to: string;
@@ -15,15 +16,15 @@ interface Draft {
   body: string;
 }
 
-const SYSTEM_PROMPT = `You are an assistant for Walker Slater Covent Garden, a bespoke and made-to-measure tailoring studio at ${ADDRESS}.
+const SYSTEM_PROMPT = `You are an assistant for Walker Slater Covent Garden, a bespoke and made-to-measure tailoring studio at ${ADDRESS} (phone: ${PHONE}).
 
-You write short, warm, professional email drafts for staff to review, edit and send. The drafts are based on real customer and order data provided to you.
+You write short, polite, professional email drafts for staff to review, edit and send, matching the house style of Walker Slater's existing customer-service emails — clear, courteous British retail tone (e.g. "We are pleased to let you know...", "Thank you for choosing Walker Slater", "please do not hesitate to contact us"). The drafts are based on real customer and order data provided to you.
 
 Rules:
-- Warm, professional, personal tone — like a trusted tailor writing to a valued customer or colleague.
-- No marketing language, no exclamation-mark enthusiasm, no sales pitches.
+- Polite, warm, professional tone — like a trusted tailor writing to a valued customer or colleague. No marketing language, no exclamation-mark enthusiasm, no sales pitches.
 - Be concise — a few short paragraphs at most.
-- Always sign off as "${SIGN_OFF}".
+- Where relevant, invite the customer to call ${PHONE} with any questions or to arrange/amend appointments.
+- Always sign off with "Kind regards," on its own line, followed by "${SIGN_OFF}" on the next line.
 - Use only the facts provided. Do not invent dates, prices, or details that aren't given.
 - If a piece of information (e.g. an email address) is missing, leave the "to" field blank.
 
@@ -385,7 +386,7 @@ function buildOrderTemplate(kind: string, f: OrderFields): Draft {
     const lines = [
       `Dear ${f.firstName},`,
       "",
-      `Thank you for your order — we're delighted to confirm the details below.`,
+      `Thank you for your order with Walker Slater. Please find your order details confirmed below:`,
       "",
       `Garment(s): ${f.garments}`,
       ...(f.fabrics ? [`Fabric: ${f.fabrics}`] : []),
@@ -393,9 +394,9 @@ function buildOrderTemplate(kind: string, f: OrderFields): Draft {
       `Deposit paid: ${f.depositPaid ?? "none recorded"}`,
       `Estimated completion: ${f.estimatedCompletion ?? "to be confirmed"}`,
       "",
-      "If you have any questions in the meantime, please don't hesitate to get in touch.",
+      `If you have any questions in the meantime, please do not hesitate to contact us on ${PHONE}.`,
       "",
-      "Warm regards,",
+      "Kind regards,",
       SIGN_OFF,
     ];
     return { to: f.to, subject: `Your Order Confirmation — ${f.garments}`, body: lines.join("\n") };
@@ -405,20 +406,24 @@ function buildOrderTemplate(kind: string, f: OrderFields): Draft {
     const balanceLine =
       f.balanceDue && f.balanceDue > 0
         ? `There is a balance of ${formatCurrency(f.balanceDue)} outstanding, which can be settled when you collect your order.`
-        : "Your order is fully paid, so there's nothing further to settle.";
+        : "Your order is fully paid, so there is nothing further to settle.";
     const lines = [
       `Dear ${f.firstName},`,
       "",
-      `We're pleased to let you know that your ${f.garments} is now ready to collect from our studio at ${ADDRESS}.`,
+      `We are pleased to let you know that your ${f.garments} has now returned from tailoring and is ready for collection from our studio at ${ADDRESS}.`,
+      "",
+      "We will hold your order for 14 days from this date.",
       "",
       balanceLine,
       "",
-      "We look forward to seeing you.",
+      `If you have a specific date you would like to collect your order, or have any questions before your visit, please call us on ${PHONE} and we will be happy to assist.`,
       "",
-      "Warm regards,",
+      "Thank you for choosing Walker Slater. We look forward to welcoming you back in-store soon.",
+      "",
+      "Kind regards,",
       SIGN_OFF,
     ];
-    return { to: f.to, subject: `Your Order is Ready to Collect — ${f.garments}`, body: lines.join("\n") };
+    return { to: f.to, subject: `Your Walker Slater Order is Ready for Collection — ${f.garments}`, body: lines.join("\n") };
   }
 
   // chase-update — internal note to the tailor
@@ -432,7 +437,7 @@ function buildOrderTemplate(kind: string, f: OrderFields): Draft {
     "",
     "Please let us know if there's anything outstanding or if the timeline has changed.",
     "",
-    "Thanks,",
+    "Kind regards,",
     SIGN_OFF,
   ];
   return { to: "", subject: `Progress Update Request — ${f.customerName} — ${f.garments}`, body: lines.join("\n") };
@@ -461,11 +466,11 @@ function buildAppointmentTemplate(f: AppointmentFields): Draft {
     ...(f.garments ? [`Regarding: ${f.garments}`] : []),
     ...(f.prepNote ? ["", f.prepNote] : []),
     "",
-    "If you need to reschedule, please get in touch and we'll be happy to help.",
+    `If you need to amend your appointment time or have any questions before your visit, please feel free to call us directly on ${PHONE}, and we will be happy to assist you.`,
     "",
-    "Looking forward to seeing you.",
+    "Thank you for choosing Walker Slater. We look forward to welcoming you in-store soon.",
     "",
-    "Warm regards,",
+    "Kind regards,",
     SIGN_OFF,
   ];
   return { to: f.to, subject: `Your Appointment at Walker Slater — ${f.dateOnly}`, body: lines.join("\n") };
@@ -490,11 +495,11 @@ function buildFollowUpTemplate(f: CustomerFields): Draft {
     "",
     intro,
     "",
-    "We'd love to hear how it's wearing and whether you're happy with the fit — please do let us know if anything needs adjusting.",
+    `We'd love to hear how it's wearing and whether you're happy with the fit — please don't hesitate to get in touch or call us on ${PHONE} if anything needs adjusting.`,
     "",
-    "It's always a pleasure to see you, and we look forward to welcoming you back to the studio.",
+    "Thank you for choosing Walker Slater. We look forward to welcoming you back in-store soon.",
     "",
-    "Warm regards,",
+    "Kind regards,",
     SIGN_OFF,
   ];
   return { to: f.to, subject: `Checking In — ${f.customerName}`, body: lines.join("\n") };
@@ -512,9 +517,11 @@ function buildNewCollectionTemplate(f: CustomerFields): Draft {
     "",
     `We wanted to let you know that some new fabrics have just arrived at the studio${tieBack}.`,
     "",
-    `If you'd like to take a look, do pop in next time you're passing ${ADDRESS} — we'd be happy to show you.`,
+    `You're very welcome to visit us in-store to view them, or call us on ${PHONE} to arrange a personal appointment.`,
     "",
-    "Warm regards,",
+    "Thank you for choosing Walker Slater. We look forward to welcoming you soon.",
+    "",
+    "Kind regards,",
     SIGN_OFF,
   ];
   return { to: f.to, subject: `New Arrivals at Walker Slater Covent Garden`, body: lines.join("\n") };
